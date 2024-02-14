@@ -11,63 +11,38 @@ import com.note_share_res_api.backend_rest_api.repository.*;
 public class NoteController {
 
     NoteRepository noteService;
-    LibraryRepository userService;
 
-    NoteController(NoteRepository noteService, LibraryRepository userService) {
+    NoteController(NoteRepository noteService) {
         this.noteService = noteService;
-        this.userService = userService;
-    }
-
-    private Sort.Direction getSortDirection(String direction) {
-        if (direction.equals("asc")) {
-            return Sort.Direction.ASC;
-        } else if (direction.equals("desc")) {
-            return Sort.Direction.DESC;
-        }
-
-        return Sort.Direction.ASC;
     }
 
     @CrossOrigin
-    @GetMapping(value = "/notes")
+    @GetMapping(value = "/library")
     public ResponseEntity<Map<String, Object>> getAllNotes(
-            @RequestParam(required = false, defaultValue = "") String ownerId,
+            @RequestParam(required = false, defaultValue = "") String college,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size,
-            @RequestParam(defaultValue = "id,desc") String[] sort,
+            @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String search) {
         try {
             List<Sort.Order> orders = new ArrayList<Sort.Order>();
+            orders.add(new Sort.Order(Sort.Direction.ASC, "views"));
 
-            if (sort[0].contains(",")) {
-                for (String sortOrder : sort) {
-                    String[] _sort = sortOrder.split(",");
-                    orders.add(new Sort.Order(getSortDirection(_sort[1]), _sort[0]));
-                }
-            } else {
-                orders.add(new Sort.Order(getSortDirection(sort[1]), sort[0]));
-            }
-
-            List<Note> notes = new ArrayList<Note>();
+            List<Library> library = new ArrayList<Library>();
             Pageable pagingSort = PageRequest.of(page, size, Sort.by(orders));
 
-            Page<Note> notesPage;
-            if (ownerId.length() == 0) {
-                if (search.length() > 0) {
-                    notesPage = noteService.searchNotes(search.toLowerCase(), pagingSort);
-                } else if (search.length() == 0)
-                    notesPage = noteService.findAll(pagingSort);
-                else
-                    notesPage = noteService.findByUid(ownerId, pagingSort);
-
+            Page<Library> notesPage;
+            if (college.length() > 0) {
+                notesPage = noteService.findByInstitution(search.toLowerCase(), college.toLowerCase(), pagingSort);
+            } else if (search.length() > 0) {
+                notesPage = noteService.searchNotes(search.toLowerCase(), pagingSort);
             } else {
-                notesPage = noteService.findByUid(ownerId, pagingSort);
+                notesPage = noteService.findAll(pagingSort);
             }
 
-            notes = notesPage.getContent();
+            library = notesPage.getContent();
 
             Map<String, Object> response = new HashMap<>();
-            response.put("notes", notes);
+            response.put("library", library);
             response.put("currentPage", notesPage.getNumber());
             response.put("totalItems", notesPage.getTotalElements());
             response.put("totalPages", notesPage.getTotalPages());
@@ -79,59 +54,18 @@ public class NoteController {
     }
 
     @CrossOrigin
-    @GetMapping(value = "/notes/{postId}")
-    public ResponseEntity<Object> findNoteById(@PathVariable int postId) {
-        try {
-            Object note = noteService.findById(postId).get();
-            return new ResponseEntity<>(note, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
+    @GetMapping(value = "/library/{id}")
+    public ResponseEntity<Optional<Library>> getCurNote(@PathVariable Integer id) {
+        Optional<Library> notes = noteService.findById(id);
+        return new ResponseEntity<>(notes, HttpStatus.OK);
     }
 
     @CrossOrigin
-    @GetMapping(value = "/notes/owner/{ownerId}")
-    public ResponseEntity<Integer> getUserDownloadCount(@PathVariable String ownerId) {
+    @PostMapping(value = "/note")
+    public ResponseEntity<Library> addLibrary(@RequestBody Library library) {
         try {
-            return new ResponseEntity<>(noteService.getDownloadCount(ownerId).stream().map(a -> a.download)
-                    .mapToInt(Integer::intValue).sum(), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @CrossOrigin
-    @PostMapping(value = "/notes")
-    public ResponseEntity<Note> addNote(@RequestBody Note noteData) {
-        try {
-            Note currNote = new Note();
-            currNote.setDesc(noteData.getDesc());
-            currNote.setFile(noteData.getFile());
-            currNote.setSubject(noteData.getSubject());
-            currNote.setTitle(noteData.getTitle());
-            currNote.setQualification(noteData.getQualification());
-            currNote.setAuthor(noteData.getAuthor());
-            currNote.setUid(noteData.getUid());
-
-            Note note = noteService.save(noteData);
-            return new ResponseEntity<>(note, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
-
-    @DeleteMapping(value = "/notes/{postId}")
-    public ResponseEntity<String> deleteNote(@PathVariable int postId) {
-        try {
-            Optional<Note> note = noteService.findById(postId);
-            if (note.isEmpty()) {
-                return new ResponseEntity<>("Post doesn't exits", HttpStatus.BAD_REQUEST);
-            }
-
-            noteService.deleteById(postId);
-            return new ResponseEntity<>("Sucessfully Deleted Note with id" + postId, HttpStatus.OK);
+            Library lib = noteService.save(library);
+            return new ResponseEntity<>(lib, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

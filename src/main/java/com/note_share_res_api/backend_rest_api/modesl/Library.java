@@ -3,7 +3,6 @@ package com.note_share_res_api.backend_rest_api.modesl;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Library {
@@ -15,16 +14,23 @@ public class Library {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	private String uid;
-	private Integer curNoteId;
-	@ManyToOne
-	Note note;
+	private String semester;
 
-	public Library(Integer id, String uid, Integer curNoteId) {
+	private String title;
+	private String course;
+	private String college;
+	private String items;
+	private String date;
+	public Integer views;
+
+	String note;
+
+	public Library(Integer id, String semester) {
 		super();
 		this.id = id;
-		this.uid = uid;
-		this.curNoteId = curNoteId;
+		this.semester = semester;
+		this.views = 0;
+
 	}
 
 	public Integer getId() {
@@ -35,28 +41,68 @@ public class Library {
 		this.id = id;
 	}
 
-	public String getUid() {
-		return uid;
+	public String getSemester() {
+		return semester;
 	}
 
-	public void setUid(String uid) {
-		this.uid = uid;
+	public void setSemester(String semester) {
+		this.semester = semester;
 	}
 
-	public Integer getNoteId() {
-		return curNoteId;
-	}
-
-	public void setNoteId(Integer curNoteId) {
-		this.curNoteId = curNoteId;
-	}
-
-	public void setNote(Note note) {
+	public void setNote(String note) {
 		this.note = note;
 	};
 
-	public Note getNote() {
+	public String getNote() {
 		return this.note;
+	}
+
+	public String getCourse() {
+		return course;
+	}
+
+	public void setCourse(String course) {
+		this.course = course;
+	}
+
+	public String getItems() {
+		return items;
+	}
+
+	public void setItems(String items) {
+		this.items = items;
+	}
+
+	public String getDate() {
+		return date;
+	}
+
+	public void setDate(String date) {
+		this.date = date;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getCollege() {
+		return college;
+	}
+
+	public void setCollege(String college) {
+		this.college = college;
+	}
+
+	public void setViews(Integer views) {
+		this.views = views;
+	};
+
+	public Integer getViews() {
+		return views;
 	}
 
 }

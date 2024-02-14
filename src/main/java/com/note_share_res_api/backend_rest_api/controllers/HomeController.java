@@ -5,14 +5,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 public class HomeController {
-     
-    @GetMapping(value="/")
+
+    @GetMapping(value = "/")
     public InnerHomeRoute getMethodName() {
-        return  new InnerHomeRoute("Hello world");
+        return new InnerHomeRoute("Welcome to notes share api");
     }
-    
+
 }
 
-
- 
- record InnerHomeRoute(String name) {}
+record InnerHomeRoute(String name) {
+}
